@@ -41,16 +41,35 @@ public class TriagemService {
         return medicoOpt;
     }
 
-    public Optional<Paciente> proximoAtendimento() {
-        List<Medico> medicosDisponiveis = medicoRepository.findByEmPlantaoTrue();
-        if (medicosDisponiveis.isEmpty()) {
-            return Optional.empty();
-        }
+   public Optional<Paciente> proximoAtendimento() {
+    List<Medico> medicos = medicoRepository.findByEmPlantaoTrue();
+    if (medicos.isEmpty()) return Optional.empty();
 
-        return pacienteRepository.findAll().stream()
-            .sorted(Comparator.comparing(Paciente::getPrioridade).reversed()
-                    .thenComparing(Paciente::getGravidade).reversed()
-                    .thenComparing(Paciente::getDataEntrada))
-            .findFirst();
-    }
+    return pacienteRepository.findAll().stream()
+        .sorted(Comparator
+            .comparing((Paciente p) -> prioridadeParaNumero(p.getPrioridade()))
+            .thenComparing(p -> gravidadeParaNumero(p.getGravidade()))
+            .thenComparing(Paciente::getDataEntrada)
+        )
+        .findFirst();
+}
+
+private int prioridadeParaNumero(String prioridade) {
+    return switch (prioridade.toLowerCase()) {
+        case "vermelha" -> 1;
+        case "amarela"  -> 2;
+        case "verde"    -> 3;
+        default         -> 4;
+    };
+}
+
+private int gravidadeParaNumero(String gravidade) {
+    return switch (gravidade.toLowerCase()) {
+        case "grave"    -> 1;
+        case "moderada" -> 2;
+        case "leve"     -> 3;
+        default         -> 4;
+    };
+}
+
 }
